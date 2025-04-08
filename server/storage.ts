@@ -5,7 +5,9 @@ import {
   teams, type Team, type InsertTeam,
   matches, type Match, type InsertMatch,
   spinHistory, type SpinHistory, type InsertSpinHistory,
-  positionEnum, eventEnum, formationEnum, playStyleEnum
+  tournaments, type Tournament, type InsertTournament,
+  tournamentParticipants, type TournamentParticipant, type InsertTournamentParticipant,
+  positionEnum, eventEnum, formationEnum, playStyleEnum, tournamentStatusEnum
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql as sqlQuery } from "drizzle-orm";
@@ -41,10 +43,23 @@ export interface IStorage {
   getMatch(id: number): Promise<Match | undefined>;
   getUserMatches(userId: number): Promise<Match[]>;
   createMatch(match: InsertMatch): Promise<Match>;
+  getTournamentMatches(tournamentId: number): Promise<Match[]>;
   
   // Spin history related functions
   getSpinHistory(userId: number, limit?: number): Promise<SpinHistory[]>;
   createSpinHistory(spinHistory: InsertSpinHistory): Promise<SpinHistory>;
+  
+  // Tournament related functions
+  getTournament(id: number): Promise<Tournament | undefined>;
+  getTournaments(status?: string): Promise<Tournament[]>;
+  createTournament(tournament: InsertTournament): Promise<Tournament>;
+  updateTournament(id: number, data: Partial<Tournament>): Promise<Tournament | undefined>;
+  
+  // Tournament participant related functions
+  getTournamentParticipants(tournamentId: number): Promise<TournamentParticipant[]>;
+  getUserTournamentParticipations(userId: number): Promise<TournamentParticipant[]>;
+  addParticipantToTournament(participant: InsertTournamentParticipant): Promise<TournamentParticipant>;
+  updateTournamentParticipant(id: number, data: Partial<TournamentParticipant>): Promise<TournamentParticipant | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -201,6 +216,14 @@ export class DatabaseStorage implements IStorage {
     return newMatch;
   }
   
+  async getTournamentMatches(tournamentId: number): Promise<Match[]> {
+    return await db
+      .select()
+      .from(matches)
+      .where(eq(matches.tournament_id, tournamentId))
+      .orderBy(desc(matches.played_at));
+  }
+  
   // Spin history related functions
   async getSpinHistory(userId: number, limit: number = 5): Promise<SpinHistory[]> {
     return await db
@@ -214,6 +237,83 @@ export class DatabaseStorage implements IStorage {
   async createSpinHistory(history: InsertSpinHistory): Promise<SpinHistory> {
     const [newHistory] = await db.insert(spinHistory).values(history).returning();
     return newHistory;
+  }
+  
+  // Tournament related functions
+  async getTournament(id: number): Promise<Tournament | undefined> {
+    const [tournament] = await db.select().from(tournaments).where(eq(tournaments.id, id));
+    return tournament;
+  }
+  
+  async getTournaments(status?: string): Promise<Tournament[]> {
+    if (status) {
+      return await db
+        .select()
+        .from(tournaments)
+        .where(eq(tournaments.status, status))
+        .orderBy(desc(tournaments.created_at));
+    }
+    
+    return await db
+      .select()
+      .from(tournaments)
+      .orderBy(desc(tournaments.created_at));
+  }
+  
+  async createTournament(tournament: InsertTournament): Promise<Tournament> {
+    const [newTournament] = await db.insert(tournaments).values(tournament).returning();
+    return newTournament;
+  }
+  
+  async updateTournament(id: number, data: Partial<Tournament>): Promise<Tournament | undefined> {
+    const [updatedTournament] = await db
+      .update(tournaments)
+      .set(data)
+      .where(eq(tournaments.id, id))
+      .returning();
+    return updatedTournament;
+  }
+  
+  // Tournament participant related functions
+  async getTournamentParticipants(tournamentId: number): Promise<TournamentParticipant[]> {
+    return await db
+      .select()
+      .from(tournamentParticipants)
+      .where(eq(tournamentParticipants.tournament_id, tournamentId));
+  }
+  
+  async getUserTournamentParticipations(userId: number): Promise<TournamentParticipant[]> {
+    return await db
+      .select()
+      .from(tournamentParticipants)
+      .where(eq(tournamentParticipants.user_id, userId));
+  }
+  
+  async addParticipantToTournament(participant: InsertTournamentParticipant): Promise<TournamentParticipant> {
+    // First, increment the current_participants count for the tournament
+    await db
+      .update(tournaments)
+      .set({
+        current_participants: sqlQuery`${tournaments.current_participants} + 1`,
+      })
+      .where(eq(tournaments.id, participant.tournament_id));
+    
+    // Then add the participant
+    const [newParticipant] = await db
+      .insert(tournamentParticipants)
+      .values(participant)
+      .returning();
+    
+    return newParticipant;
+  }
+  
+  async updateTournamentParticipant(id: number, data: Partial<TournamentParticipant>): Promise<TournamentParticipant | undefined> {
+    const [updatedParticipant] = await db
+      .update(tournamentParticipants)
+      .set(data)
+      .where(eq(tournamentParticipants.id, id))
+      .returning();
+    return updatedParticipant;
   }
 }
 

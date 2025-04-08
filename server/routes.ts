@@ -11,6 +11,15 @@ import { login, getCurrentUser, logout } from "./controllers/auth";
 import { getSpinOptions, performSpin, getRecentSpins, getUserPlayers } from "./controllers/spin";
 import { getUserTeams, createTeam, getTeamDetails, updateTeam, deleteTeam } from "./controllers/team";
 import { startMatch, getMatchHistory, getMatchDetails, handleMatchSimulation } from "./controllers/match";
+import { 
+  createTournament, 
+  getTournaments,
+  getTournamentDetails,
+  joinTournament,
+  leaveTournament,
+  startTournament,
+  recordTournamentMatchResult
+} from "./controllers/tournament";
 
 const MemoryStore = memorystore(session);
 
@@ -144,6 +153,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/matches/start', startMatch);
   app.get('/api/matches', getMatchHistory);
   app.get('/api/matches/:id', getMatchDetails);
+  
+  // Tournament routes
+  app.get('/api/tournaments', getTournaments);
+  app.post('/api/tournaments', createTournament);
+  app.get('/api/tournaments/:id', getTournamentDetails);
+  app.post('/api/tournaments/:id/join', joinTournament);
+  app.post('/api/tournaments/:id/leave', leaveTournament);
+  app.post('/api/tournaments/:id/start', startTournament);
+  app.post('/api/tournaments/:id/match/:round/:matchPosition', recordTournamentMatchResult);
   
   return httpServer;
 }

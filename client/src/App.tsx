@@ -5,6 +5,9 @@ import Spin from "@/pages/Spin";
 import TeamBattle from "@/pages/TeamBattle";
 import Collection from "@/pages/Collection";
 import NotFound from "@/pages/not-found";
+import Tournaments from "@/pages/Tournaments";
+import TournamentDetails from "@/pages/TournamentDetails";
+import TournamentCreate from "@/pages/TournamentCreate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -29,6 +32,9 @@ function Router() {
           <Route path="/team-battle" component={TeamBattle} />
           <Route path="/collection" component={Collection} />
           <Route path="/shop" component={Shop} />
+          <Route path="/tournaments" component={Tournaments} />
+          <Route path="/tournaments/create" component={TournamentCreate} />
+          <Route path="/tournaments/:id" component={TournamentDetails} />
           <Route component={NotFound} />
         </Switch>
       </main>

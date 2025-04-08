@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { FaSync, FaLayerGroup, FaGamepad, FaStore } from "react-icons/fa";
+import { FaSync, FaLayerGroup, FaGamepad, FaStore, FaTrophy } from "react-icons/fa";
 
 interface NavigationProps {
   activeTab: string;
@@ -48,6 +48,18 @@ const Navigation = ({ activeTab }: NavigationProps) => {
             onClick={() => setLocation("/team-battle")}
           >
             <FaGamepad className="inline-block mr-2" /> TEAM BATTLE
+          </div>
+          
+          <div
+            className={cn(
+              "tab-item flex-shrink-0 px-5 py-3 font-bold border-b-2 transition-colors cursor-pointer",
+              activeTab === "tournaments" 
+                ? "text-yellow-400 border-yellow-400" 
+                : "text-gray-400 border-transparent hover:text-white hover:border-gray-400"
+            )}
+            onClick={() => setLocation("/tournaments")}
+          >
+            <FaTrophy className="inline-block mr-2" /> TOURNAMENTS
           </div>
           
           <div

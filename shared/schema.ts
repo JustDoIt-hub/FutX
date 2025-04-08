@@ -58,6 +58,27 @@ export const playStyleEnum = pgEnum("play_style", [
   "TIKI_TAKA", "COUNTER_ATTACK", "TOTAL_FOOTBALL", "HIGH_PRESS"
 ]);
 
+// Tournament status enum
+export const tournamentStatusEnum = pgEnum("tournament_status", [
+  "REGISTRATION", "IN_PROGRESS", "COMPLETED"
+]);
+
+// Tournaments table
+export const tournaments = pgTable("tournaments", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  prize_coins: integer("prize_coins").default(5000).notNull(),
+  max_participants: integer("max_participants").default(16).notNull(),
+  current_participants: integer("current_participants").default(0).notNull(),
+  status: tournamentStatusEnum("status").default("REGISTRATION").notNull(),
+  bracket: json("bracket"),
+  winner_id: integer("winner_id").references(() => users.id, { onDelete: "set null" }),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  starts_at: timestamp("starts_at"),
+  ends_at: timestamp("ends_at"),
+});
+
 // Teams schema for user's created teams
 export const teams = pgTable("teams", {
   id: serial("id").primaryKey(),
@@ -68,6 +89,17 @@ export const teams = pgTable("teams", {
   players: json("players").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Tournament participants table
+export const tournamentParticipants = pgTable("tournament_participants", {
+  id: serial("id").primaryKey(),
+  tournament_id: integer("tournament_id").notNull().references(() => tournaments.id, { onDelete: "cascade" }),
+  user_id: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  team_id: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  eliminated: boolean("eliminated").default(false).notNull(),
+  position: integer("position"),
+  joined_at: timestamp("joined_at").defaultNow().notNull(),
 });
 
 // Match results schema
@@ -83,6 +115,8 @@ export const matches = pgTable("matches", {
   shots_on_target: integer("shots_on_target").notNull(),
   corners: integer("corners").notNull(),
   commentary: json("commentary").notNull(),
+  tournament_id: integer("tournament_id").references(() => tournaments.id, { onDelete: "set null" }),
+  tournament_round: integer("tournament_round"),
   played_at: timestamp("played_at").defaultNow().notNull(),
 });
 
@@ -144,6 +178,8 @@ export const insertMatchSchema = createInsertSchema(matches).pick({
   shots_on_target: true,
   corners: true,
   commentary: true,
+  tournament_id: true,
+  tournament_round: true,
 });
 
 export const insertSpinHistorySchema = createInsertSchema(spinHistory).pick({
@@ -173,6 +209,30 @@ export type InsertMatch = z.infer<typeof insertMatchSchema>;
 export type SpinHistory = typeof spinHistory.$inferSelect;
 export type InsertSpinHistory = z.infer<typeof insertSpinHistorySchema>;
 
+// Insert schemas for tournaments
+export const insertTournamentSchema = createInsertSchema(tournaments).pick({
+  name: true,
+  description: true,
+  prize_coins: true,
+  max_participants: true,
+  status: true,
+  starts_at: true,
+  ends_at: true,
+});
+
+export const insertTournamentParticipantSchema = createInsertSchema(tournamentParticipants).pick({
+  tournament_id: true,
+  user_id: true,
+  team_id: true,
+});
+
+// Types for tournaments
+export type Tournament = typeof tournaments.$inferSelect;
+export type InsertTournament = z.infer<typeof insertTournamentSchema>;
+
+export type TournamentParticipant = typeof tournamentParticipants.$inferSelect;
+export type InsertTournamentParticipant = z.infer<typeof insertTournamentParticipantSchema>;
+
 // Validation schemas for API requests
 export const telegramAuthSchema = z.object({
   code: z.string().min(6).max(10),
@@ -190,5 +250,19 @@ export const createTeamSchema = z.object({
 });
 
 export const startMatchSchema = z.object({
+  teamId: z.number(),
+});
+
+export const createTournamentSchema = z.object({
+  name: z.string().min(3).max(50),
+  description: z.string().optional(),
+  prize_coins: z.number().min(500).default(5000),
+  max_participants: z.number().min(4).max(32).default(16),
+  starts_at: z.string().optional(), // ISO date string
+  ends_at: z.string().optional(), // ISO date string
+});
+
+export const joinTournamentSchema = z.object({
+  tournamentId: z.number(),
   teamId: z.number(),
 });
