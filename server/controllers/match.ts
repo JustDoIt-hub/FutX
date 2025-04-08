@@ -161,12 +161,15 @@ export function handleMatchSimulation(ws: WebSocket, userId: number, teamId: num
         return;
       }
       
+      // No need to check team ownership in guest mode
+      /*
       // Check if the team belongs to the user
       if (team.user_id !== userId) {
         ws.send(JSON.stringify({ type: 'error', message: 'Not authorized to use this team' }));
         ws.close();
         return;
       }
+      */
       
       // Generate CPU team
       const cpuTeam = generateCpuTeam(team);
@@ -321,11 +324,8 @@ async function saveMatchResult(userId: number, userTeam: any, cpuTeam: any, matc
 // HTTP endpoint to start a match
 export async function startMatch(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     // Validate request body
     const { teamId } = startMatchSchema.parse(req.body);
@@ -361,11 +361,8 @@ export async function startMatch(req: Request, res: Response) {
 // Get match history
 export async function getMatchHistory(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     // Get all matches for the user
     const matches = await storage.getUserMatches(userId);
@@ -381,11 +378,8 @@ export async function getMatchHistory(req: Request, res: Response) {
 // Get match details
 export async function getMatchDetails(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     const matchId = parseInt(req.params.id);
     if (isNaN(matchId)) {

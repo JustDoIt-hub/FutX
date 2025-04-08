@@ -6,11 +6,8 @@ import { fromZodError } from 'zod-validation-error';
 
 export async function getUserTeams(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     // Get all teams for the user
     const teams = await storage.getUserTeams(userId);
@@ -25,11 +22,8 @@ export async function getUserTeams(req: Request, res: Response) {
 
 export async function createTeam(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     // Validate request body
     const { name, formation, playStyle, players: playerIds } = createTeamSchema.parse(req.body);
@@ -78,11 +72,8 @@ export async function createTeam(req: Request, res: Response) {
 
 export async function getTeamDetails(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     const teamId = parseInt(req.params.id);
     if (isNaN(teamId)) {
@@ -111,11 +102,8 @@ export async function getTeamDetails(req: Request, res: Response) {
 
 export async function updateTeam(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     const teamId = parseInt(req.params.id);
     if (isNaN(teamId)) {
@@ -179,11 +167,8 @@ export async function updateTeam(req: Request, res: Response) {
 
 export async function deleteTeam(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     const teamId = parseInt(req.params.id);
     if (isNaN(teamId)) {

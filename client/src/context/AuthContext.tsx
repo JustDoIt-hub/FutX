@@ -10,6 +10,7 @@ interface User {
 interface AuthContextType {
   user: User;
   isAuthenticated: boolean;
+  logout: () => void;
 }
 
 // Default guest user - always authenticated
@@ -22,6 +23,7 @@ const DEFAULT_USER: User = {
 export const AuthContext = createContext<AuthContextType>({
   user: DEFAULT_USER,
   isAuthenticated: true,
+  logout: () => {},
 });
 
 interface AuthProviderProps {
@@ -32,11 +34,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Always use the default user, no auth needed
   const [user] = useState<User>(DEFAULT_USER);
 
+  // Empty logout function - no-op since we're always authenticated
+  const logout = () => {};
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: true,
+        logout
       }}
     >
       {children}

@@ -39,11 +39,8 @@ export async function getSpinOptions(req: Request, res: Response) {
 
 export async function performSpin(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     // Validate request body
     const { type } = spinRequestSchema.parse(req.body);
@@ -121,11 +118,8 @@ export async function performSpin(req: Request, res: Response) {
 
 export async function getRecentSpins(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     // Get recent spin history with limit
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
@@ -154,11 +148,8 @@ export async function getRecentSpins(req: Request, res: Response) {
 
 export async function getUserPlayers(req: Request, res: Response) {
   try {
-    // Check if user is authenticated
-    const userId = req.session?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Use default user ID (1) instead of requiring authentication
+    const userId = req.session?.userId || 1;
     
     // Get all players for the user
     const players = await storage.getUserPlayers(userId);
