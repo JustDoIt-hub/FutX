@@ -19,15 +19,9 @@ function Router() {
     console.log("Auth state:", { isAuthenticated, isLoading, user });
   }, [isAuthenticated, isLoading, user]);
 
-  // If authentication is still loading, don't render routes yet
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mb-4"></div>
-        <p className="text-white">Loading application...</p>
-      </div>
-    );
-  }
+  // Only show loading spinner when we're intentionally waiting for a login/logout process
+  // Not during initial app load
+  const showLoader = isLoading;
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">

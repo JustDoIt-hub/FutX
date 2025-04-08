@@ -20,7 +20,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
-  isLoading: true,
+  isLoading: false, // Set this to false by default
   isAuthenticated: false,
   login: async () => false,
   logout: async () => {},
@@ -32,7 +32,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Start with false to avoid being stuck loading
   const { toast } = useToast();
 
   // Check if user is already logged in
