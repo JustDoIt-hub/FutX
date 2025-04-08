@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaSync } from 'react-icons/fa';
+import { FaSync, FaCheckCircle } from 'react-icons/fa';
 
 interface SpinWheelProps {
   title: string;
@@ -34,20 +34,25 @@ const SpinWheel = ({ title, options, onSpin, isSpinning, result }: SpinWheelProp
   
   // Handle spinner animation
   const handleSpin = () => {
-    if (isSpinning) return;
+    if (isSpinning || isSpun) return;
     onSpin();
   };
   
   return (
-    <div className="spinner bg-gray-900 rounded-lg flex flex-col h-56 overflow-hidden relative">
+    <div className={`spinner bg-gray-900 rounded-lg flex flex-col h-56 overflow-hidden relative ${result ? 'ring-2 ring-yellow-400' : ''}`}>
       {/* Highlight area */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-        <div className="w-full h-12 border-t-2 border-b-2 border-yellow-400"></div>
+        <div className={`w-full h-12 border-t-2 border-b-2 ${result ? 'border-yellow-400 bg-yellow-400/10' : 'border-yellow-400'}`}></div>
       </div>
       
       {/* Title */}
-      <div className="text-center font-bold text-sm py-2 bg-yellow-400 text-gray-900">
+      <div className="text-center font-bold text-sm py-2 bg-yellow-400 text-gray-900 flex justify-center items-center">
         {title}
+        {result && (
+          <span className="ml-2 text-green-800">
+            <FaCheckCircle />
+          </span>
+        )}
       </div>
       
       {/* Spinner items */}
@@ -70,7 +75,7 @@ const SpinWheel = ({ title, options, onSpin, isSpinning, result }: SpinWheelProp
             {items.map((item, index) => (
               <div 
                 key={`${item}-${index}`}
-                className="h-12 flex items-center justify-center font-bold text-xl text-white"
+                className={`h-12 flex items-center justify-center font-bold text-xl ${result && result === item ? 'text-yellow-400' : 'text-white'}`}
               >
                 {item}
               </div>
@@ -82,15 +87,29 @@ const SpinWheel = ({ title, options, onSpin, isSpinning, result }: SpinWheelProp
       {/* Spin button */}
       <Button 
         onClick={handleSpin}
-        disabled={isSpinning}
-        className="spin-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 transition-colors"
+        disabled={isSpinning || isSpun}
+        className={`spin-btn font-bold py-2 transition-colors ${
+          isSpun 
+            ? 'bg-green-500 hover:bg-green-600 text-white' 
+            : 'bg-blue-500 hover:bg-blue-600 text-white'
+        }`}
       >
         {isSpinning ? (
-          <FaSync className="animate-spin mr-2" />
+          <>
+            <FaSync className="animate-spin mr-2" />
+            SPINNING
+          </>
+        ) : isSpun ? (
+          <>
+            <FaCheckCircle className="mr-2" />
+            {result}
+          </>
         ) : (
-          <FaSync className="mr-2" />
+          <>
+            <FaSync className="mr-2" />
+            SPIN
+          </>
         )}
-        SPIN
       </Button>
     </div>
   );

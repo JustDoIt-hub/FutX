@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSpin } from "@/hooks/useSpin";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import SpinResult from "@/components/SpinResult";
 import RecentSpins from "@/components/RecentSpins";
 import Navigation from "@/components/Navigation";
 import { motion } from "framer-motion";
-import { FaSync } from "react-icons/fa";
+import { FaSync, FaCheck, FaFutbol } from "react-icons/fa";
 
 const Spin = () => {
   const { user } = useAuth();
@@ -25,29 +25,53 @@ const Spin = () => {
   const [positionDone, setPositionDone] = useState(false);
   const [eventDone, setEventDone] = useState(false);
   const [ovrDone, setOvrDone] = useState(false);
+  const [localPositionResult, setLocalPositionResult] = useState<string | null>(null);
+  const [localEventResult, setLocalEventResult] = useState<string | null>(null);
+  const [localOvrResult, setLocalOvrResult] = useState<string | null>(null);
+
+  // Update the local state based on spinResult
+  useEffect(() => {
+    if (spinResult) {
+      if (spinResult.positionResult) {
+        setLocalPositionResult(spinResult.positionResult);
+        setPositionDone(true);
+      }
+      if (spinResult.eventResult) {
+        setLocalEventResult(spinResult.eventResult);
+        setEventDone(true);
+      }
+      if (spinResult.ovrResult) {
+        setLocalOvrResult(spinResult.ovrResult);
+        setOvrDone(true);
+      }
+    }
+  }, [spinResult]);
 
   // Handle individual wheel spins
   const handlePositionSpin = () => {
     spin('position');
-    setPositionDone(true);
   };
 
   const handleEventSpin = () => {
     spin('event');
-    setEventDone(true);
   };
 
   const handleOvrSpin = () => {
     spin('ovr');
-    setOvrDone(true);
   };
 
   // Handle spin all
   const handleSpinAll = () => {
     spin('all');
-    setPositionDone(true);
-    setEventDone(true);
-    setOvrDone(true);
+  };
+
+  // Complete the individual spins and get a player
+  const handleCompleteSpins = () => {
+    // Reset the spinResult first to clear any previous results
+    resetSpinResult();
+    
+    // Then trigger a new 'all' spin with our stored values
+    spin('all');
   };
 
   // Reset everything for a new spin
@@ -56,7 +80,13 @@ const Spin = () => {
     setPositionDone(false);
     setEventDone(false);
     setOvrDone(false);
+    setLocalPositionResult(null);
+    setLocalEventResult(null);
+    setLocalOvrResult(null);
   };
+
+  // Check if all three spins are complete
+  const allSpinsComplete = positionDone && eventDone && ovrDone;
 
   if (isLoading) {
     return (
@@ -104,7 +134,7 @@ const Spin = () => {
                     options={spinOptions.positions}
                     onSpin={handlePositionSpin}
                     isSpinning={isSpinning && spinningType === 'position'}
-                    result={spinResult?.positionResult}
+                    result={localPositionResult}
                   />
                   
                   {/* Event Spinner */}
@@ -113,7 +143,7 @@ const Spin = () => {
                     options={spinOptions.events}
                     onSpin={handleEventSpin}
                     isSpinning={isSpinning && spinningType === 'event'}
-                    result={spinResult?.eventResult}
+                    result={localEventResult}
                   />
                   
                   {/* OVR Spinner */}
@@ -122,25 +152,66 @@ const Spin = () => {
                     options={spinOptions.ovrRanges}
                     onSpin={handleOvrSpin}
                     isSpinning={isSpinning && spinningType === 'ovr'}
-                    result={spinResult?.ovrResult}
+                    result={localOvrResult}
                   />
                 </div>
                 
-                <div className="mt-6 text-center">
-                  <Button
-                    id="spinAllBtn"
-                    onClick={handleSpinAll}
-                    disabled={isSpinning || (positionDone && eventDone && ovrDone)}
-                    className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  >
-                    {isSpinning && spinningType === 'all' ? (
-                      <>
-                        <FaSync className="animate-spin mr-2" /> SPINNING...
-                      </>
-                    ) : (
-                      'SPIN ALL'
-                    )}
-                  </Button>
+                <div className="mt-6 text-center space-y-4">
+                  {allSpinsComplete ? (
+                    <div className="space-y-4">
+                      <div className="bg-blue-600/20 rounded-lg py-3 px-4">
+                        <h3 className="text-lg font-bold text-white mb-2">Spin Results:</h3>
+                        <div className="flex justify-center gap-6 text-white">
+                          <div className="bg-blue-500/40 px-3 py-2 rounded">
+                            <span className="font-bold">Position:</span> {localPositionResult}
+                          </div>
+                          <div className="bg-blue-500/40 px-3 py-2 rounded">
+                            <span className="font-bold">Event:</span> {localEventResult}
+                          </div>
+                          <div className="bg-blue-500/40 px-3 py-2 rounded">
+                            <span className="font-bold">OVR:</span> {localOvrResult}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={handleCompleteSpins}
+                        disabled={isSpinning}
+                        className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSpinning ? (
+                          <>
+                            <FaSync className="animate-spin mr-2" /> SEARCHING PLAYER...
+                          </>
+                        ) : (
+                          <>
+                            <FaFutbol className="mr-2" /> GET PLAYER
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={handleResetSpin}
+                        variant="outline"
+                        className="border-yellow-400 text-yellow-400 hover:bg-yellow-400/20 font-medium ml-4"
+                      >
+                        RESET & SPIN AGAIN
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      id="spinAllBtn"
+                      onClick={handleSpinAll}
+                      disabled={isSpinning}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      {isSpinning && spinningType === 'all' ? (
+                        <>
+                          <FaSync className="animate-spin mr-2" /> SPINNING...
+                        </>
+                      ) : (
+                        'SPIN ALL'
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
