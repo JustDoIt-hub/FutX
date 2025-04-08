@@ -46,6 +46,14 @@ const TelegramAuth = () => {
         setLocation("/");
       } else {
         setError("Login failed. Please check your code and try again.");
+        // Make sure to try clearing and setting the code again
+        setCode("");
+        
+        // For demo purposes, provide a hint about the demo code
+        toast({
+          title: "Try the Demo Code",
+          description: "Click 'Use Demo Code' button below to auto-fill a working code.",
+        });
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -55,6 +63,8 @@ const TelegramAuth = () => {
         description: "Could not connect to the server. Please try again.",
         variant: "destructive",
       });
+      // Reset code on error
+      setCode("");
     } finally {
       setIsSubmitting(false);
     }

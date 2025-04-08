@@ -37,28 +37,43 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Check if user is already logged in
   useEffect(() => {
-    const checkAuthStatus = async () => {
+    const checkAuthStatus = () => {
       try {
         console.log("Checking authentication status...");
-        const res = await fetch('/api/auth/me', {
-          credentials: 'include',
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          console.log("User authenticated:", data.user);
-          setUser(data.user);
-        } else {
-          console.log("User not authenticated");
-          // Clear user just to be safe
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/auth/me');
+        xhr.withCredentials = true;
+        
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              console.log("User authenticated:", data.user);
+              setUser(data.user);
+            } catch (err) {
+              console.error('Error parsing auth response:', err);
+              setUser(null);
+            }
+          } else {
+            console.log("User not authenticated");
+            setUser(null);
+          }
+          
+          console.log("Auth check complete, setting isLoading to false");
+          setIsLoading(false);
+        };
+        
+        xhr.onerror = () => {
+          console.error('Network error during auth check');
           setUser(null);
-        }
+          setIsLoading(false);
+        };
+        
+        xhr.send();
       } catch (error) {
         console.error('Failed to check auth status:', error);
-        // Clear user on error
         setUser(null);
-      } finally {
-        console.log("Auth check complete, setting isLoading to false");
         setIsLoading(false);
       }
     };
@@ -75,22 +90,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (code: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // For demo purposes, we'll use direct fetch to avoid complexity
-      const res = await fetch('/api/auth/telegram', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code }),
-        credentials: 'include',
+      console.log(`Attempting to login with code: ${code}`);
+      
+      // Use XMLHttpRequest instead of fetch to ensure cookies are handled properly
+      const loginPromise = new Promise<{user: any}>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/auth/telegram');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.withCredentials = true;
+        
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              console.log('Login response:', data);
+              resolve(data);
+            } catch (err) {
+              console.error('Error parsing response:', err);
+              reject(new Error('Invalid response format'));
+            }
+          } else {
+            console.error('Login failed with status:', xhr.status);
+            reject(new Error(xhr.responseText || 'Authentication failed'));
+          }
+        };
+        
+        xhr.onerror = () => {
+          console.error('Network error during login');
+          reject(new Error('Network error during login'));
+        };
+        
+        xhr.send(JSON.stringify({ code }));
       });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Authentication failed');
-      }
-
-      const data = await res.json();
+      
+      const data = await loginPromise;
+      console.log('Setting user to:', data.user);
       setUser(data.user);
       
       toast({
@@ -115,16 +149,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async (): Promise<void> => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
+      const logoutPromise = new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/auth/logout');
+        xhr.withCredentials = true;
+        
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log('Logout successful');
+            resolve();
+          } else {
+            console.error('Logout failed with status:', xhr.status);
+            reject(new Error('Logout failed'));
+          }
+        };
+        
+        xhr.onerror = () => {
+          console.error('Network error during logout');
+          reject(new Error('Network error during logout'));
+        };
+        
+        xhr.send();
       });
-
-      if (!res.ok) {
-        throw new Error('Logout failed');
-      }
-
+      
+      await logoutPromise;
       setUser(null);
+      
       toast({
         title: 'Logout successful',
         description: 'You have been logged out',
