@@ -65,11 +65,28 @@ export async function performSpin(req: Request, res: Response) {
     // If all three options are selected, find a matching player
     if (type === 'all' && positionResult && eventResult && ovrResult) {
       try {
-        const player = await storage.getRandomPlayerByFilters(
+        console.log(`Looking for player with position=${positionResult}, event=${eventResult}, ovrRange=${ovrResult}`);
+        
+        // Try to find a player with the exact filters
+        let player = await storage.getRandomPlayerByFilters(
           positionResult,
           eventResult,
           ovrResult
         );
+        
+        // If no player found, try relaxing the criteria by getting any player with matching position
+        if (!player) {
+          console.log(`No exact match found, getting player with position=${positionResult}`);
+          
+          // Get all players with the position
+          const positionPlayers = await storage.getPlayersByPosition(positionResult);
+          
+          if (positionPlayers.length > 0) {
+            // Pick a random player from the available ones
+            player = getRandomItem(positionPlayers);
+            console.log(`Selected player: ${player.name} (${player.position}, ${player.event}, ${player.overall})`);
+          }
+        }
         
         if (player) {
           // Add player to user's collection
@@ -91,6 +108,8 @@ export async function performSpin(req: Request, res: Response) {
             ovrResult,
             player
           });
+        } else {
+          console.log('No player found even after relaxing criteria');
         }
       } catch (error) {
         console.error('Error finding player:', error);
