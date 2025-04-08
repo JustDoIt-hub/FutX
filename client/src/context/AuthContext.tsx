@@ -39,22 +39,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
+        console.log("Checking authentication status...");
         const res = await fetch('/api/auth/me', {
           credentials: 'include',
         });
 
         if (res.ok) {
           const data = await res.json();
+          console.log("User authenticated:", data.user);
           setUser(data.user);
+        } else {
+          console.log("User not authenticated");
+          // Clear user just to be safe
+          setUser(null);
         }
       } catch (error) {
         console.error('Failed to check auth status:', error);
+        // Clear user on error
+        setUser(null);
       } finally {
+        console.log("Auth check complete, setting isLoading to false");
         setIsLoading(false);
       }
     };
 
-    checkAuthStatus();
+    // Small delay to ensure everything is initialized
+    const timer = setTimeout(() => {
+      checkAuthStatus();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // Login with Telegram code
