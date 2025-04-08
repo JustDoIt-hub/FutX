@@ -56,19 +56,45 @@ export async function login(req: Request, res: Response) {
 
 export async function getCurrentUser(req: Request, res: Response) {
   try {
-    const userId = req.session?.userId;
+    // Check if there's a userId in the session
+    let userId = req.session?.userId;
     
+    // If no user in session, let's auto-create a guest user
     if (!userId) {
-      log('No user ID found in session', 'auth');
-      return res.status(401).json({ message: 'Not authenticated' });
+      log('No user in session, creating a guest user', 'auth');
+      
+      // Create a username with timestamp to ensure uniqueness
+      const username = `guest_${Date.now()}`;
+      
+      // Create a new user
+      const user = await storage.createUser({
+        username,
+        password: Math.random().toString(36).slice(2), // Generate a random password
+        telegram_id: null,
+        telegram_username: null,
+        coins: 10000 // Give guest users plenty of coins
+      });
+      
+      // Store user in session
+      if (req.session) {
+        req.session.userId = user.id;
+        userId = user.id;
+        log(`Created and stored guest user ID ${user.id} in session`, 'auth');
+      }
+      
+      // Return user info
+      const { password, ...userInfo } = user;
+      return res.status(200).json({ user: userInfo });
     }
     
+    // If we have a userId, fetch the user data
     log(`Fetching current user with ID: ${userId}`, 'auth');
     const user = await storage.getUser(userId);
     
     if (!user) {
-      log(`User with ID ${userId} not found in database`, 'auth');
-      return res.status(404).json({ message: 'User not found' });
+      log(`User with ID ${userId} not found in database, creating new guest user`, 'auth');
+      // Create a new guest user if the user was not found
+      return login(req, res);
     }
     
     log(`Returned user info for ID: ${userId}`, 'auth');
@@ -77,7 +103,8 @@ export async function getCurrentUser(req: Request, res: Response) {
     
   } catch (error) {
     log(`Get current user error: ${error instanceof Error ? error.message : String(error)}`, 'auth');
-    return res.status(500).json({ message: 'Failed to get user information' });
+    // Try to create a guest user on error
+    return login(req, res);
   }
 }
 

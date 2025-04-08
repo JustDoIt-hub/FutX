@@ -30,17 +30,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
   // Setup WebSocket connection
   useEffect(() => {
-    // Only connect if user is authenticated
-    if (!isAuthenticated) {
-      // If not authenticated, ensure no socket is open
-      if (socketRef.current) {
-        socketRef.current.close();
-        socketRef.current = null;
-        setSocket(null);
-        setIsConnected(false);
-      }
-      return;
-    }
+    // Always connect regardless of authentication
     
     const connectWebSocket = () => {
       // Clear any existing reconnection timeouts
@@ -101,9 +91,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         if (event.code !== 1000 && event.code !== 1001) {
           console.log('Attempting to reconnect WebSocket in 3 seconds...');
           reconnectTimeoutRef.current = window.setTimeout(() => {
-            if (isAuthenticated) {
-              connectWebSocket();
-            }
+            connectWebSocket();
           }, 3000);
         }
       };
@@ -131,7 +119,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         setIsConnected(false);
       }
     };
-  }, [isAuthenticated, user]);
+  }, [user]);
   
   const sendMessage = (data: any) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -147,14 +135,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   };
   
   const startMatchSimulation = (teamId: number) => {
-    if (!isAuthenticated || !user) {
-      toast({
-        title: 'Authentication Required',
-        description: 'You must be logged in to start a match',
-        variant: 'destructive'
-      });
-      return;
-    }
+    // Always authenticated
     
     if (!isConnected) {
       toast({
