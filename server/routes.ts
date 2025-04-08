@@ -7,7 +7,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { log } from "./vite";
 
 // Import controllers
-import { authenticateWithTelegram, getCurrentUser, logout } from "./controllers/auth";
+import { login, getCurrentUser, logout } from "./controllers/auth";
 import { getSpinOptions, performSpin, getRecentSpins, getUserPlayers } from "./controllers/spin";
 import { getUserTeams, createTeam, getTeamDetails, updateTeam, deleteTeam } from "./controllers/team";
 import { startMatch, getMatchHistory, getMatchDetails, handleMatchSimulation } from "./controllers/match";
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Authentication routes
-  app.post('/api/auth/telegram', authenticateWithTelegram);
+  app.post('/api/auth/login', login);
   app.get('/api/auth/me', getCurrentUser);
   app.post('/api/auth/logout', logout);
   
