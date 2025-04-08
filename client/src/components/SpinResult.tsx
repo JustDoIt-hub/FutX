@@ -101,14 +101,13 @@ const SpinResult = ({ result, onReset }: SpinResultProps) => {
                 <FaFutbol className="mr-2" /> SPIN AGAIN
               </Button>
               
-              <Link href="/team-battle">
-                <Button
+              <Button
                   className="border border-yellow-500 bg-transparent hover:bg-yellow-500/10 font-bold transition-colors"
                   variant="outline"
+                  onClick={() => window.location.href = "/team-battle"}
                 >
                   CREATE TEAM
                 </Button>
-              </Link>
             </div>
           </div>
           

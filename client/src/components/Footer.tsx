@@ -14,19 +14,19 @@ const Footer = () => {
           
           <div className="flex space-x-6 mb-4 md:mb-0">
             <Link href="/terms">
-              <a className="text-gray-400 hover:text-white text-sm transition-colors">
+              <span className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer">
                 Terms
-              </a>
+              </span>
             </Link>
             <Link href="/privacy">
-              <a className="text-gray-400 hover:text-white text-sm transition-colors">
+              <span className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer">
                 Privacy
-              </a>
+              </span>
             </Link>
             <Link href="/help">
-              <a className="text-gray-400 hover:text-white text-sm transition-colors">
+              <span className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer">
                 Help
-              </a>
+              </span>
             </Link>
           </div>
           
